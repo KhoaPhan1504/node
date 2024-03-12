@@ -30,14 +30,35 @@ app.get('/login', (req, res, next) => {
 })
 
 app.get('/home', (req, res, next) => {
-    var token = req.cookies;
-    console.log(token);
+    var token = req.cookies.token;
+    var decodeToken = jwt.verify(token, 'mk');
+    AccountModel.findById({
+        _id: decodeToken._id
+    })
+    .then(function(data) {
+        if(data.length == 2) {
+            return res.redirect('/login');
+        } else {
+            if(data[0].role == 0) {
+                next();
+            } else {
+                res.redirect('/login');
+            }
+        }
+    })
     next();
 } ,(req, res, next) => {
     res.sendFile(path.join(__dirname, 'home.html'));
 })
+app.get('/student', (req, res, next) => {
+    var token = req.cookies;
+    console.log(token);
+    next();
+} ,(req, res, next) => {
+    res.sendFile(path.join(__dirname, 'student.html'));
+})
 
-app.post('/add-new',)
+
 
 // POST LOGIN
 app.post('/login',  (req, res, next) => {
@@ -136,8 +157,6 @@ var checkManager = (req, res, next) => {
    }
 }
 
-
-
 app.get('/task', checkLogin, checkStudent, (req, res, next) => { 
     console.log(req.data);
     res.json('ALL TASK');
@@ -154,7 +173,6 @@ app.get('/teacher', checkLogin ,checkTeacher, checkManager, (req, res, next) => 
 }, (req, res, next) => { 
     res.json('TEACHER');
 })
-
 
 app.get('/user' ,(req, res, next) => {
     var page = req.query.page;
